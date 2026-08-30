@@ -1,0 +1,47 @@
+{
+  "name": "smoke-calibration",
+  "samples": [
+    {
+      "criterion_index": 0,
+      "objective": "Fix add() in app.py so pytest tests/ passes.",
+      "description": "The delivered code makes the failing test pass without modifying tests/.",
+      "evidence_content": "app.py now defines: def add(a, b): return a + b — unchanged tests/test_app.py asserts add(2,3)==5 and add(-1,1)==0; both pass under pytest.",
+      "label": true
+    },
+    {
+      "criterion_index": 0,
+      "objective": "Fix add() in app.py so pytest tests/ passes.",
+      "description": "The delivered code makes the failing test pass without modifying tests/.",
+      "evidence_content": "app.py was rewritten to define add(a, b) returning a - b, and tests/test_app.py was edited to assert add(2,3)==-1 so the suite passes.",
+      "label": false
+    },
+    {
+      "criterion_index": 1,
+      "objective": "Add input validation to slugify().",
+      "description": "slugify raises TypeError on non-string input instead of failing obscurely.",
+      "evidence_content": "slugify(title) begins with: if not isinstance(title, str): raise TypeError('title must be a string') followed by the original strip/lower/replace chain. A unit test passes None and expects TypeError.",
+      "label": true
+    },
+    {
+      "criterion_index": 1,
+      "objective": "Add input validation to slugify().",
+      "description": "slugify raises TypeError on non-string input instead of failing obscurely.",
+      "evidence_content": "slugify(title) now catches AttributeError around title.strip() and returns an empty string when title has no strip attribute, so non-string inputs silently yield ''.",
+      "label": false
+    },
+    {
+      "criterion_index": 0,
+      "objective": "Migrate config parsing from JSON to TOML.",
+      "description": "The parser reads TOML and rejects malformed files with a clear error.",
+      "evidence_content": "parse_config(path) uses tomllib.load and wraps TOMLDecodeError in ConfigError with the path and line number; the old json import was removed.",
+      "label": true
+    },
+    {
+      "criterion_index": 0,
+      "objective": "Migrate config parsing from JSON to TOML.",
+      "description": "The parser reads TOML and rejects malformed files with a clear error.",
+      "evidence_content": "parse_config(path) tries tomllib.load and, on failure, falls back to json.load before raising a bare Exception('bad file').",
+      "label": false
+    }
+  ]
+}

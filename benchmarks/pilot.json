@@ -1,0 +1,65 @@
+{
+  "name": "local-scientific-pilot",
+  "tasks": [
+    {
+      "id": "bug-addition",
+      "category": "bug_fix",
+      "request": "Correct a small arithmetic defect and preserve the public API.",
+      "workspace": "benchmarks/fixtures/bug-addition",
+      "hidden_checks": ["python -m pytest -q"],
+      "token_limit": 4000,
+      "cost_limit_usd": 1.0,
+      "fixture_results": {
+        "strong_single": {"outcome": "verified", "verified_score": 1.0, "input_tokens": 900, "output_tokens": 180, "calls": 2, "wall_time_ms": 850, "tool_operations": 4},
+        "cheap_best_of_n": {"outcome": "verified", "verified_score": 1.0, "input_tokens": 330, "output_tokens": 80, "calls": 1, "wall_time_ms": 250, "tool_operations": 2},
+        "singleton_expert": {"outcome": "verified", "verified_score": 1.0, "input_tokens": 1050, "output_tokens": 210, "calls": 2, "wall_time_ms": 1200, "tool_operations": 4},
+        "northstack": {"outcome": "verified", "verified_score": 1.0, "input_tokens": 720, "output_tokens": 160, "calls": 3, "wall_time_ms": 980, "tool_operations": 5}
+      }
+    },
+    {
+      "id": "feature-validation",
+      "category": "feature",
+      "request": "Add deterministic input validation without changing valid behavior.",
+      "workspace": "benchmarks/fixtures/feature-validation",
+      "hidden_checks": ["python -m pytest -q"],
+      "token_limit": 6000,
+      "cost_limit_usd": 1.5,
+      "fixture_results": {
+        "strong_single": {"outcome": "failed", "verified_score": 0.0, "input_tokens": 1300, "output_tokens": 260, "calls": 3, "wall_time_ms": 1350, "tool_operations": 5},
+        "cheap_best_of_n": {"outcome": "abstained", "verified_score": 0.0, "input_tokens": 450, "output_tokens": 120, "calls": 1, "wall_time_ms": 330, "tool_operations": 3},
+        "singleton_expert": {"outcome": "verified", "verified_score": 1.0, "input_tokens": 1550, "output_tokens": 300, "calls": 3, "wall_time_ms": 1900, "tool_operations": 6},
+        "northstack": {"outcome": "verified", "verified_score": 1.0, "input_tokens": 1150, "output_tokens": 250, "calls": 5, "wall_time_ms": 1700, "retries": 1, "tool_operations": 8}
+      }
+    },
+    {
+      "id": "refactor-parser",
+      "category": "refactor",
+      "request": "Refactor parsing internals while retaining externally observable behavior.",
+      "workspace": "benchmarks/fixtures/refactor-parser",
+      "hidden_checks": ["python -m pytest -q"],
+      "token_limit": 6500,
+      "cost_limit_usd": 1.5,
+      "fixture_results": {
+        "strong_single": {"outcome": "verified", "verified_score": 1.0, "input_tokens": 1450, "output_tokens": 280, "calls": 3, "wall_time_ms": 1550, "tool_operations": 6},
+        "cheap_best_of_n": {"outcome": "failed", "verified_score": 0.0, "input_tokens": 500, "output_tokens": 150, "calls": 1, "wall_time_ms": 400, "tool_operations": 3},
+        "singleton_expert": {"outcome": "verified", "verified_score": 1.0, "input_tokens": 1750, "output_tokens": 340, "calls": 3, "wall_time_ms": 2150, "tool_operations": 7},
+        "northstack": {"outcome": "abstained", "verified_score": 0.0, "input_tokens": 1250, "output_tokens": 260, "calls": 5, "wall_time_ms": 1950, "tool_operations": 8}
+      }
+    },
+    {
+      "id": "documentation-config",
+      "category": "documentation",
+      "request": "Document configuration behavior and include a verified example.",
+      "workspace": "benchmarks/fixtures/documentation-config",
+      "hidden_checks": ["python -m pytest -q"],
+      "token_limit": 3500,
+      "cost_limit_usd": 0.75,
+      "fixture_results": {
+        "strong_single": {"outcome": "verified", "verified_score": 1.0, "input_tokens": 700, "output_tokens": 190, "calls": 2, "wall_time_ms": 720, "tool_operations": 3},
+        "cheap_best_of_n": {"outcome": "verified", "verified_score": 1.0, "input_tokens": 240, "output_tokens": 90, "calls": 1, "wall_time_ms": 210, "tool_operations": 2},
+        "singleton_expert": {"outcome": "verified", "verified_score": 1.0, "input_tokens": 850, "output_tokens": 220, "calls": 2, "wall_time_ms": 980, "tool_operations": 3},
+        "northstack": {"outcome": "verified", "verified_score": 1.0, "input_tokens": 650, "output_tokens": 180, "calls": 3, "wall_time_ms": 800, "tool_operations": 4}
+      }
+    }
+  ]
+}

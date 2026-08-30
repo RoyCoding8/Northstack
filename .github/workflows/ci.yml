@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      docker_smoke:
+        description: Run the real Docker daemon smoke test
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build:css
+      - run: uv sync --locked --extra dev --extra web
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy
+      - run: uv run lint-imports
+      - run: uv run pytest -m "not live" -q tests/test_live_suite_integrity.py
+      - run: uv run coverage run -m pytest -m "not live" -q
+      - run: uv run coverage report --fail-under=85
+      - run: uv run pip-audit
+
+  web-assets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build:css
+
+  platform-contracts:
+    name: Platform contracts (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --locked --extra dev --extra web
+      - run: uv run pytest -q tests/test_atomic_io.py tests/test_commands_output.py tests/test_config_store.py tests/test_workspace.py
+
+  docker-smoke:
+    if: github.event_name == 'workflow_dispatch' && inputs.docker_smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --locked --extra dev --extra web
+      - run: docker version
+      - run: uv run pytest -q -m docker tests/test_docker_isolation.py
+        env:
+          NORTHSTACK_DOCKER_SMOKE: "1"

@@ -1,0 +1,166 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "northstack"
+version = "0.1.0"
+description = "Typed, event-sourced control plane for verifiable AI project delivery"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.12"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Typing :: Typed",
+]
+dependencies = [
+    "pydantic>=2.9,<3",
+    "pydantic-settings>=2.6,<3",
+    "httpx>=0.27,<1",
+    "typer>=0.15,<1",
+    "jsonschema>=4.20,<5",
+    "python-dotenv>=1.2.2,<2",
+    "rich>=15.0.0,<16",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.0.3,<10",
+    "pytest-asyncio>=1.2,<2",
+    "pytest-randomly>=3.15,<4",
+    "pytest-timeout>=2.3,<3",
+    "hypothesis>=6.100,<7",
+    "httpx2>=2,<3",
+    "ruff>=0.8,<1",
+    "mypy>=1.14,<2",
+    "import-linter>=2.0,<3",
+    "pip-audit>=2.7,<3",
+    "pre-commit>=4,<5",
+    "coverage>=7.6,<8",
+    "opentelemetry-sdk>=1.27,<2",
+]
+otel = [
+    "opentelemetry-api>=1.27,<2",
+]
+web = [
+    "fastapi>=0.115,<1",
+    "uvicorn[standard]>=0.30,<1",
+    "tomli-w>=1.0,<2",
+]
+
+[project.scripts]
+northstack = "northstack.interfaces.cli:app"
+northstack-web = "northstack.interfaces.web.server:main"
+
+[project.urls]
+Repository = "https://git.sr.ht/~roycoding8/northstack"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/northstack"]
+artifacts = ["src/northstack/interfaces/web/static/components.css"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "B", "S", "BLE", "ASYNC", "RUF100"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/northstack/interfaces/cli.py" = ["B008"]
+"src/northstack/interfaces/tui.py" = ["B008"]
+"src/northstack/adapters/workspace/commands.py" = ["S603", "S607"]
+"tests/*" = [
+    "B017",
+    "S101",
+    "S108",
+    "S105",
+    "S106",
+    "S603",
+    "S605",
+    "S607",
+    "S608",
+    "S311",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+asyncio_default_test_loop_scope = "function"
+filterwarnings = [
+    "error::ResourceWarning",
+    "error::pytest.PytestUnraisableExceptionWarning",
+    "error::pytest.PytestUnhandledThreadExceptionWarning",
+    "error::starlette.exceptions.StarletteDeprecationWarning",
+]
+
+timeout = 120
+
+[tool.coverage.run]
+source = ["northstack"]
+
+[tool.coverage.report]
+fail_under = 85
+show_missing = true
+
+[tool.mypy]
+python_version = "3.12"
+files = [
+    "src/northstack/domain",
+    "src/northstack/events",
+    "src/northstack/ports",
+    "src/northstack/adapters",
+    "src/northstack/application",
+    "src/northstack/interfaces",
+    "src/northstack/config.py",
+]
+check_untyped_defs = true
+no_implicit_optional = true
+disallow_any_generics = true
+warn_return_any = true
+warn_unused_ignores = true
+show_error_codes = true
+
+[[tool.mypy.overrides]]
+module = ["tomli_w", "jsonschema", "fastapi", "fastapi.*", "uvicorn", "uvicorn.*"]
+ignore_missing_imports = true
+
+[tool.importlinter]
+root_package = "northstack"
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "Layers point downwards only"
+type = "layers"
+layers = [
+    "northstack.interfaces",
+    "northstack.application",
+    "northstack.ports",
+    "northstack.adapters",
+    "northstack.events",
+    "northstack.domain",
+]
+
+[[tool.importlinter.contracts]]
+name = "Config is cross-cutting and depends on nothing above the domain"
+type = "forbidden"
+source_modules = ["northstack.config"]
+forbidden_modules = [
+    "northstack.adapters",
+    "northstack.application",
+    "northstack.events",
+    "northstack.interfaces",
+    "northstack.ports",
+]
+
+[[tool.importlinter.contracts]]
+name = "The domain is pure: no framework or I/O adapters"
+type = "forbidden"
+source_modules = ["northstack.domain"]
+forbidden_modules = ["httpx", "sqlite3", "fastapi", "typer", "jsonschema"]

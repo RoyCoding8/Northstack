@@ -1,0 +1,171 @@
+{
+  "name": "live-pilot-v1",
+  "tasks": [
+    {
+      "id": "fix-failing-test",
+      "category": "bug_fix",
+      "request": "Fix the failing tests in this repository. The bug is in the product code (calc.py); the tests are the specification and must not be modified. All tests must pass.",
+      "workspace": "tasks/fix-failing-test",
+      "token_limit": 60000,
+      "cost_limit_usd": 1.0,
+      "checks": [
+        {
+          "name": "unittest-suite-green",
+          "argv": ["python", "-m", "unittest", "discover", "-s", "tests", "-q"],
+          "expect_exit_code": 0,
+          "timeout_seconds": 60
+        },
+        {
+          "name": "tests-untouched",
+          "path": "tests/test_calc.py",
+          "content_contains": "assertEqual(add(2, 3), 5)"
+        }
+      ]
+    },
+    {
+      "id": "add-feature",
+      "category": "feature",
+      "request": "Add a farewell(name) method to the Greeter class in greeter.py that returns 'Goodbye, <name>!'. The provided tests in tests/test_greeter.py specify the behavior and must not be modified. All tests must pass.",
+      "workspace": "tasks/add-feature",
+      "token_limit": 60000,
+      "cost_limit_usd": 1.0,
+      "checks": [
+        {
+          "name": "unittest-suite-green",
+          "argv": ["python", "-m", "unittest", "discover", "-s", "tests", "-q"],
+          "expect_exit_code": 0,
+          "timeout_seconds": 60
+        },
+        {
+          "name": "farewell-implemented",
+          "path": "greeter.py",
+          "content_contains": "def farewell"
+        }
+      ]
+    },
+    {
+      "id": "safe-refactor",
+      "category": "refactor",
+      "request": "Rename the private helper _combine in mathops.py to _merge everywhere it appears. Public names (total, concat) and behavior must not change. All tests must pass after the rename.",
+      "workspace": "tasks/safe-refactor",
+      "token_limit": 60000,
+      "cost_limit_usd": 1.0,
+      "checks": [
+        {
+          "name": "unittest-suite-green",
+          "argv": ["python", "-m", "unittest", "discover", "-s", "tests", "-q"],
+          "expect_exit_code": 0,
+          "timeout_seconds": 60
+        },
+        {
+          "name": "rename-applied",
+          "path": "mathops.py",
+          "content_contains": "_merge"
+        }
+      ]
+    },
+    {
+      "id": "docs-config",
+      "category": "docs",
+      "request": "Create a file called CONTRIBUTING.md in the repository root containing a section with the exact heading '## How to contribute' and a numbered list with at least two steps.",
+      "workspace": "tasks/docs-config",
+      "token_limit": 40000,
+      "cost_limit_usd": 0.5,
+      "checks": [
+        {
+          "name": "contributing-exists",
+          "path": "CONTRIBUTING.md",
+          "content_contains": "## How to contribute"
+        },
+        {
+          "name": "numbered-steps",
+          "path": "CONTRIBUTING.md",
+          "content_contains": "1."
+        }
+      ]
+    },
+    {
+      "id": "fix-two-bugs",
+      "category": "bug_fix",
+      "request": "Two functions in arith.py are wrong (mul and div). Fix them so all tests pass. The tests in tests/test_arith.py are the specification and must not be modified.",
+      "workspace": "tasks/fix-two-bugs",
+      "token_limit": 60000,
+      "cost_limit_usd": 1.0,
+      "checks": [
+        {
+          "name": "unittest-suite-green",
+          "argv": ["python", "-m", "unittest", "discover", "-s", "tests", "-q"],
+          "expect_exit_code": 0,
+          "timeout_seconds": 60
+        },
+        {
+          "name": "tests-untouched",
+          "path": "tests/test_arith.py",
+          "content_contains": "assertEqual(mul(3, 4), 12)"
+        }
+      ]
+    },
+    {
+      "id": "add-validation",
+      "category": "feature",
+      "request": "Add input validation to distance() in points.py: it must raise ValueError when any argument is not an int or float (bools are invalid too), keeping correct results for valid numeric input. The tests in tests/test_points.py specify the behavior and must not be modified.",
+      "workspace": "tasks/add-validation",
+      "token_limit": 60000,
+      "cost_limit_usd": 1.0,
+      "checks": [
+        {
+          "name": "unittest-suite-green",
+          "argv": ["python", "-m", "unittest", "discover", "-s", "tests", "-q"],
+          "expect_exit_code": 0,
+          "timeout_seconds": 60
+        },
+        {
+          "name": "validation-present",
+          "path": "points.py",
+          "content_contains": "ValueError"
+        }
+      ]
+    },
+    {
+      "id": "extract-helper",
+      "category": "refactor",
+      "request": "Extract the duplicated non-negativity check in shapes.py into a single private helper named _require_non_negative used by both rectangle_area and triangle_area. Public behavior must not change; all tests must keep passing.",
+      "workspace": "tasks/extract-helper",
+      "token_limit": 60000,
+      "cost_limit_usd": 1.0,
+      "checks": [
+        {
+          "name": "unittest-suite-green",
+          "argv": ["python", "-m", "unittest", "discover", "-s", "tests", "-q"],
+          "expect_exit_code": 0,
+          "timeout_seconds": 60
+        },
+        {
+          "name": "helper-extracted",
+          "path": "shapes.py",
+          "content_contains": "_require_non_negative"
+        }
+      ]
+    },
+    {
+      "id": "write-config",
+      "category": "docs",
+      "request": "Create a file called settings.json in the repository root containing a JSON object with: \"host\" set to the string \"127.0.0.1\", \"port\" set to the number 8080, \"debug\" set to the boolean false, and \"features\" set to a list of strings that includes \"metrics\".",
+      "workspace": "tasks/write-config",
+      "token_limit": 40000,
+      "cost_limit_usd": 0.5,
+      "checks": [
+        {
+          "name": "settings-json-valid",
+          "argv": [
+            "python",
+            "-c",
+            "import json; d=json.load(open('settings.json')); assert d['host']=='127.0.0.1' and d['port']==8080 and d['debug'] is False and 'metrics' in d['features']"
+          ],
+          "expect_exit_code": 0,
+          "timeout_seconds": 30
+        }
+      ]
+    }
+  ]
+}

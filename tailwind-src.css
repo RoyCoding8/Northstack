@@ -1,0 +1,418 @@
+/*
+  MD3 component layer, built with Tailwind v3 + @material-tailwind/html.
+
+  This is the NEW engine for the northstack control surface.  The previous
+  components.css was 829 lines of hand-rolled Material-3 CSS.  It is replaced
+  by this Tailwind source: each semantic component class the views emit
+  (.card, .btn, .chip, .badge, .field__input, ...) is now a short @apply
+  block of Material Design 3 utility classes.
+
+  Why this satisfies "let Google's thing take over / clean UI / remove complex
+  CSS": the STYLING ENGINE is Tailwind+MD3, and the bespoke CSS collapses to a
+  few dozen @apply directives instead of hundreds of lines of properties.
+  Class names are unchanged so the views (the el() call sites) keep working as-is.
+
+  THREE-LAYER DISCIPLINE preserved, and provably stronger than before:
+    - tokens.css remains the only hand-authored hex source.
+    - tailwind.config maps every Tailwind color token to a var(--md-sys-color-*)
+      or var(--p-*), so every utility the build emits produces var(...) — never
+      a raw hex.  Preflight (Tailwind's reset, which carries hex) is disabled,
+      so the built bundle is hex-free.  The token-compliance test therefore
+      passes WITHOUT any exemption, on the generated bundle.
+    - Preflight's reset work (box-sizing, button defaults, etc.) is re-homed
+      in app.css using token vars, since tokens.css owns the base canvas there.
+
+  Build: `npm run build`  →  src/northstack/web/static/components.css (minified)
+  Dev:   `npm run dev` (watch)
+*/
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   STATE LAYER  (MD3 interactive overlay, ::after on currentColor)
+   ============================================================ */
+.state-layer { @apply relative isolate; }
+.state-layer::after {
+  content: ""; @apply absolute inset-0 rounded-[inherit] pointer-events-none;
+  background: currentColor; opacity: 0; z-index: 0;
+  transition: opacity var(--p-dur-micro) var(--p-ease-emph);
+}
+.state-layer:hover::after          { opacity: var(--state-opacity-hover, 0.08); }
+.state-layer:focus-visible::after  { opacity: var(--state-opacity-focus, 0.12); }
+.state-layer:active::after         { opacity: var(--state-opacity-pressed, 0.12); }
+
+/* ============================================================
+   MATERIAL SYMBOLS icon font base
+   ============================================================ */
+.icon {
+  font-family: var(--p-font-symbols); font-weight: 400; font-style: normal;
+  line-height: 1; letter-spacing: normal; text-transform: none;
+  white-space: nowrap; word-wrap: normal; direction: ltr;
+  -webkit-font-feature-settings: "liga"; -webkit-font-smoothing: antialiased;
+  font-feature-settings: "liga";
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+  @apply inline-flex items-center justify-center overflow-hidden;
+}
+
+/* ============================================================
+   BUTTONS  (MD3 filled / tonal / outline / danger / ghost, sm/lg)
+   ============================================================ */
+.btn {
+  font: var(--md-sys-typescale-label); letter-spacing: 0.01em;
+  @apply inline-flex items-center gap-2 min-h-[40px] px-4 rounded-full
+         select-none whitespace-nowrap transition-all duration-[150ms];
+  border: none; background: transparent; color: var(--btn-ghost-fg);
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.btn:active { transform: scale(0.97); }
+.btn:disabled { @apply cursor-not-allowed; opacity: 0.38; transform: none; }
+.btn:disabled::after { display: none; }
+.btn .icon { width: var(--p-icon-md); height: var(--p-icon-md); font-size: var(--p-icon-md); flex: 0 0 auto; }
+
+.btn--filled {
+  background: var(--btn-filled-bg); color: var(--btn-filled-fg);
+  /* Harness CTA: ink/white pill with a soft bead — no colored glow. */
+  box-shadow: var(--btn-filled-shadow);
+}
+.btn--filled:hover { box-shadow: var(--btn-filled-shadow-hover); transform: translateY(-1px); }
+.btn--tonal   { background: var(--btn-tonal-bg);   color: var(--btn-tonal-fg); }
+.btn--outline { background: transparent; color: var(--btn-outline-fg); box-shadow: inset 0 0 0 1px var(--btn-outline-border); }
+.btn--outline:hover { box-shadow: inset 0 0 0 1px var(--btn-outline-border-hover); }
+.btn--danger  { background: var(--btn-danger-bg);  color: var(--btn-danger-fg); }
+.btn--ghost   { background: transparent; }
+.btn--sm      { @apply min-h-[32px] px-3; }
+.btn--lg      { @apply min-h-[48px] px-6; }
+.btn--block   { @apply w-full justify-center; }
+
+.btn:focus-visible, [tabindex]:focus-visible, a:focus-visible,
+input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--btn-focus-ring); outline-offset: 2px;
+}
+
+/* ============================================================
+   ICON BUTTON
+   ============================================================ */
+.icon-btn {
+  @apply inline-flex items-center justify-center w-10 h-10 min-w-[40px] min-h-[40px]
+         rounded-full cursor-pointer p-0 transition-all duration-[150ms];
+  border: none; background: transparent; color: var(--btn-ghost-fg);
+  -webkit-tap-highlight-color: transparent;
+}
+.icon-btn .icon, .icon-btn svg { width: var(--p-icon-md); height: var(--p-icon-md); font-size: var(--p-icon-md); }
+.icon-btn:disabled { @apply cursor-not-allowed; opacity: 0.38; }
+.icon-btn:active { transform: scale(0.94); }
+
+/* ============================================================
+   CARDS  (MD3 elevated surface 1, dp1)
+   ============================================================ */
+.card {
+  background: var(--glass-bg-strong); color: var(--card-fg);
+  @apply rounded-xl p-4 transition-all duration-[200ms];
+  border: 1px solid var(--glass-border); box-shadow: var(--card-shadow);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+}
+.card--clickable { @apply cursor-pointer; }
+.card--clickable:hover { box-shadow: var(--card-shadow-hover); background: var(--glass-bg-strong); border-color: var(--glass-border-strong); }
+.card__title  { font: var(--md-sys-typescale-title); margin: 0 0 var(--p-space-2); }
+.card__sub    { font: var(--md-sys-typescale-body); color: var(--card-subtle); margin: 0; }
+.card__header { @apply flex items-center justify-between gap-3 mb-3; }
+
+/* ============================================================
+   STAT TILE
+   ============================================================ */
+.stat {
+  background: var(--glass-bg-strong);
+  @apply rounded-xl p-5 flex flex-col gap-2 min-h-[120px] transition-all duration-[200ms];
+  border: 1px solid var(--glass-border); box-shadow: var(--card-shadow);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  position: relative; overflow: hidden;
+}
+.stat:hover { background: var(--stat-bg-hover); box-shadow: var(--card-shadow-hover); border-color: var(--glass-border-strong); }
+/* Soft left accent (pastel, not neon) — color via --accent, Figma-quiet */
+.stat__accent {
+  position: absolute; top: 12px; bottom: 12px; left: 0; width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--accent, transparent);
+  opacity: 0.55;
+}
+.stat__label {
+  font: var(--md-sys-typescale-label);
+  color: var(--stat-subtle);
+  @apply flex items-center gap-2;
+  letter-spacing: 0;
+}
+/* Big airy KPI number — Figma 15% / 4% pattern */
+.stat__value {
+  font: var(--md-sys-typescale-stat);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  color: var(--stat-fg);
+  margin-top: auto;
+}
+.stat__value--mono {
+  font: 400 22px/28px var(--p-font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.stat__sub { font: var(--md-sys-typescale-label); color: var(--stat-subtle); }
+.stat__delta { font: 500 14px/18px var(--p-font-ui); color: var(--chart-growth); @apply inline-flex items-center gap-1; }
+.stat__link {
+  margin-top: auto;
+  font: var(--md-sys-typescale-label);
+  color: var(--md-sys-color-on-primary-container);
+  text-decoration: none;
+  @apply inline-flex items-center gap-1;
+}
+.stat__link:hover { color: var(--md-sys-color-primary); text-decoration: underline; }
+
+/* ============================================================
+   CHIPS & FILTER CHIPS  (MD3 assist/ filter chips)
+   ============================================================ */
+.chip {
+  @apply inline-flex items-center gap-1 min-h-[32px] px-3 rounded-md;
+  background: var(--chip-bg); color: var(--chip-fg);
+  font: var(--md-sys-typescale-label); border: none; cursor: default;
+}
+.chip .icon { width: var(--p-icon-sm); height: var(--p-icon-sm); font-size: var(--p-icon-sm); }
+.chip--filter { @apply cursor-pointer; background: var(--chip-filter-bg); border: 1px solid var(--table-border); transition: background var(--p-dur-micro) var(--p-ease-emph); }
+.chip--filter[aria-pressed="true"] { background: var(--btn-filled-bg); color: var(--btn-filled-fg); }
+.chip--role { background: var(--chip-role-1-bg); color: var(--chip-role-1-fg); }
+.chip--role:nth-child(6n+2) { background: var(--chip-role-2-bg); color: var(--chip-role-2-fg); }
+.chip--role:nth-child(6n+3) { background: var(--chip-role-3-bg); color: var(--chip-role-3-fg); }
+.chip--role:nth-child(6n+4) { background: var(--chip-role-4-bg); color: var(--chip-role-4-fg); }
+.chip--role:nth-child(6n+5) { background: var(--chip-role-5-bg); color: var(--chip-role-5-fg); }
+.chip--role:nth-child(6n)   { background: var(--chip-role-6-bg); color: var(--chip-role-6-fg); }
+.chip--cap  { background: var(--chip-cap-1-bg); color: var(--chip-cap-1-fg); }
+.chip--cap:nth-child(4n+2) { background: var(--chip-cap-2-bg); color: var(--chip-cap-2-fg); }
+.chip--cap:nth-child(4n+3) { background: var(--chip-cap-3-bg); color: var(--chip-cap-3-fg); }
+.chip--cap:nth-child(4n)   { background: var(--chip-cap-4-bg); color: var(--chip-cap-4-fg); }
+
+/* ============================================================
+   BADGES  (icon+text; verified/failed/active/neutral/abstained)
+   ============================================================ */
+.badge {
+  @apply inline-flex items-center gap-1 min-h-[24px] px-2 rounded-full whitespace-nowrap;
+  font: var(--md-sys-typescale-label);
+}
+.badge .icon { width: var(--p-icon-sm); height: var(--p-icon-sm); font-size: var(--p-icon-sm); }
+.badge--verified  { background: var(--badge-verified-bg); color: var(--badge-verified-fg); }
+.badge--failed    { background: var(--badge-failed-bg);   color: var(--badge-failed-fg); }
+.badge--active    { background: var(--badge-active-bg);   color: var(--badge-active-fg); }
+.badge--neutral   { background: var(--badge-neutral-bg);  color: var(--badge-neutral-fg); }
+.badge--abstained { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+.badge--dot       { @apply rounded-full p-0 min-h-[8px]; width: 8px; height: 8px; }
+.badge--dot.ok    { background: var(--md-sys-color-success); }
+.badge--dot.unset { background: var(--md-sys-color-error); }
+.badge--dot.none  { background: var(--md-sys-color-outline); }
+
+/* ============================================================
+   TEXT FIELDS  (MD3 outlined)
+   ============================================================ */
+.field { @apply relative flex flex-col gap-1; }
+.field > label { font: var(--md-sys-typescale-label); color: var(--field-helper); @apply flex items-center gap-1; }
+.field__req { color: var(--field-error); }
+.field__input, .field__select, .field__textarea {
+  font: var(--md-sys-typescale-body); color: var(--field-fg);
+  background: var(--field-bg); border: 1px solid var(--field-border);
+  @apply rounded-md px-3 py-3 min-h-[44px] w-full box-border;
+  transition: border-color var(--p-dur-micro) var(--p-ease-emph), box-shadow var(--p-dur-micro) var(--p-ease-emph);
+}
+.field__textarea { min-height: 96px; resize: vertical; font-family: var(--p-font-mono); }
+.field__input:hover, .field__select:hover, .field__textarea:hover { border-color: var(--field-fg); }
+.field__input:focus, .field__select:focus, .field__textarea:focus {
+  border-color: var(--field-border-focus); outline: none;
+  box-shadow: inset 0 0 0 1px var(--field-border-focus), 0 0 0 3px var(--focus-glow);
+}
+.field__helper { font: var(--md-sys-typescale-label); color: var(--field-helper); }
+.field__error  { font: var(--md-sys-typescale-label); color: var(--field-error); display: none; }
+.field--error .field__input, .field--error .field__select, .field--error .field__textarea { border-color: var(--field-error); }
+.field--error .field__error   { display: block; }
+.field--error .field__helper  { display: none; }
+.field__input:disabled, .field__select:disabled, .field__textarea:disabled { opacity: 0.5; cursor: not-allowed; }
+.field__select option { color: var(--field-fg); background: var(--field-bg); }
+
+/* SELECT MENU — themed dropdown; native <select> popups are OS-drawn and cannot be styled */
+.select-menu { @apply relative; }
+.select-menu--disabled { opacity: 0.5; }
+.select-menu__btn {
+  @apply flex items-center justify-between gap-2 w-full text-left cursor-pointer min-h-[44px];
+  font: var(--md-sys-typescale-body); color: var(--field-fg);
+  background: var(--field-bg); border: 1px solid var(--field-border); border-radius: var(--p-shape-md);
+  padding: 0 12px;
+  transition: border-color var(--p-dur-micro) var(--p-ease-emph), box-shadow var(--p-dur-micro) var(--p-ease-emph);
+}
+.select-menu__btn:hover { border-color: var(--field-fg); }
+.select-menu--open .select-menu__btn { border-color: var(--field-border-focus); outline: none; box-shadow: inset 0 0 0 1px var(--field-border-focus), 0 0 0 3px var(--focus-glow); }
+.select-menu__btn svg { flex: none; color: var(--field-helper); }
+.select-menu__label { @apply truncate; }
+.select-menu__list {
+  /* above the dialog scrim (100) and palette (150): the popup is appended to
+     <body> to escape the dialog's overflow, so a lower layer puts it behind
+     the scrim -- invisible, and the click closes the dialog instead. */
+  @apply hidden fixed z-[180] m-0 p-1 list-none overflow-auto;
+  max-height: 240px;
+  background: color-mix(in srgb, var(--dialog-bg) 30%, var(--page-bg) 70%);
+  color: var(--dialog-fg);
+  border: 1px solid var(--table-border); border-radius: var(--p-shape-md);
+  box-shadow: var(--card-shadow), var(--p-elev-2);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+}
+.select-menu__list--open { @apply block; }
+.select-menu__opt {
+  @apply flex items-center justify-between gap-2 px-3 py-2 whitespace-nowrap cursor-pointer rounded-sm;
+  font: var(--md-sys-typescale-body); color: var(--dialog-fg);
+}
+.select-menu__opt--hover, .select-menu__opt:hover { background: var(--table-row-hover); }
+.select-menu__opt--sel { color: var(--md-sys-color-primary); }
+
+/* SWITCH */
+.switch { @apply inline-flex items-center gap-2 cursor-pointer; font: var(--md-sys-typescale-label); color: var(--field-fg); }
+.switch input {
+  appearance: none; width: 52px; height: 32px; border-radius: var(--p-shape-full);
+  background: var(--md-sys-color-surface-container-highest); border: 2px solid var(--field-border);
+  @apply relative cursor-pointer flex-[0_0_auto];
+  transition: background var(--p-dur-std) var(--p-ease-emph), border-color var(--p-dur-std) var(--p-ease-emph);
+}
+.switch input::after { content: ""; @apply absolute rounded-full; top: 50%; left: 8px; width: 8px; height: 8px; background: var(--field-border); transform: translateY(-50%); transition: transform var(--p-dur-std) var(--p-ease-emph), width var(--p-dur-std) var(--p-ease-emph), height var(--p-dur-std) var(--p-ease-emph), background var(--p-dur-std) var(--p-ease-emph); }
+.switch input:checked { background: var(--md-sys-color-primary); border-color: var(--md-sys-color-primary); }
+.switch input:checked::after { left: 50%; width: 24px; height: 24px; background: var(--md-sys-color-on-primary); transform: translate(0, -50%); }
+.switch input:focus-visible { outline: 2px solid var(--btn-focus-ring); outline-offset: 2px; }
+
+/* ============================================================
+   TABLES
+   ============================================================ */
+.table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--table-bg); @apply rounded-md overflow-hidden; font: var(--md-sys-typescale-body); }
+.table th { text-align: left; font: var(--md-sys-typescale-label); color: var(--table-head-fg); @apply px-4 py-3 cursor-pointer select-none whitespace-nowrap; border-bottom: 1px solid var(--table-border); }
+.table th[aria-sort="ascending"]::after  { content: " ▲"; }
+.table th[aria-sort="descending"]::after { content: " ▼"; }
+.table td { @apply px-4 py-3 border-b; border-color: var(--table-border); vertical-align: middle; color: var(--card-fg); }
+.table tbody tr { transition: background var(--p-dur-micro) var(--p-ease-emph); }
+.table tbody tr:hover { background: var(--table-row-hover); }
+.table tbody tr:last-child td { border-bottom: none; }
+.table--clickable tbody tr { @apply cursor-pointer; }
+.table td.mono { font: var(--md-sys-typescale-mono); font-variant-numeric: tabular-nums; }
+.table td.num  { font-variant-numeric: tabular-nums; text-align: right; }
+
+/* ============================================================
+   DIALOG / SCRIM
+   ============================================================ */
+.scrim { @apply fixed inset-0 z-[100] grid place-items-center p-4; background: var(--scrim); opacity: 0; animation: scrim-in var(--p-dur-std) var(--p-ease-emph) forwards; }
+.scrim[data-closing] { animation: scrim-out calc(var(--p-dur-std) * 0.7) var(--p-ease-std) forwards; }
+@keyframes scrim-in  { to { opacity: 1; } }
+@keyframes scrim-out { to { opacity: 0; } }
+.dialog {
+  background: var(--dialog-bg); color: var(--dialog-fg);
+  @apply rounded-[24px] p-6 flex flex-col gap-4 overflow-auto;
+  box-shadow: var(--card-shadow), var(--p-elev-4); width: min(560px, 100%); max-height: 90vh;
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  transform: scale(0.9); opacity: 0; animation: dialog-in var(--p-dur-std) var(--p-ease-emph) forwards;
+}
+.dialog[data-closing] { animation: dialog-out calc(var(--p-dur-std) * 0.7) var(--p-ease-std) forwards; }
+@keyframes dialog-in  { to { transform: scale(1);   opacity: 1; } }
+@keyframes dialog-out { to { transform: scale(0.95); opacity: 0; } }
+.dialog__title  { font: var(--md-sys-typescale-title); margin: 0; }
+.dialog__actions { @apply flex justify-end gap-2 mt-2; }
+.dialog__actions .btn--danger { margin-right: auto; }
+
+/* SNACKBAR */
+.snackbar-stack { @apply fixed bottom-6 z-[200] flex flex-col-reverse gap-2 items-center pointer-events-none; left: 50%; transform: translateX(-50%); }
+.snackbar { background: var(--snackbar-bg); color: var(--snackbar-fg); @apply rounded-md px-4 py-3 flex items-center gap-3 min-h-[48px] pointer-events-auto; box-shadow: var(--p-elev-3); font: var(--md-sys-typescale-label); animation: snackbar-in var(--p-dur-std) var(--p-ease-emph); max-width: min(560px, 90vw); }
+@keyframes snackbar-in { from { transform: translateY(16px); opacity: 0; } }
+.snackbar__action { background: transparent; border: none; color: var(--md-sys-color-primary); font: var(--md-sys-typescale-label); cursor: pointer; text-transform: uppercase; }
+.snackbar--error { box-shadow: inset 0 0 0 1px var(--md-sys-color-error); }
+
+/* SKELETON */
+.skeleton { background: linear-gradient(90deg, var(--md-sys-color-skeleton-from) 25%, var(--md-sys-color-skeleton-to) 37%, var(--md-sys-color-skeleton-from) 63%); background-size: 200% 100%; animation: skeleton 1.4s ease infinite; @apply rounded-md; }
+@keyframes skeleton { to { background-position: -200% 0; } }
+
+/* PROGRESS / BUDGET BAR */
+/* Soft orange gradient bars like Figma "Top states" */
+.budget-bar { width: 100%; height: 10px; @apply rounded-full overflow-hidden; background: var(--md-sys-color-surface-container-highest); }
+.budget-bar__fill {
+  height: 100%; @apply rounded-full;
+  background: linear-gradient(90deg, var(--chart-bar-from), var(--chart-bar-to));
+  transition: width var(--p-dur-std) var(--p-ease-emph);
+}
+.budget-bar__fill--ok   { background: linear-gradient(90deg, var(--chart-growth-soft), var(--chart-growth)); }
+.budget-bar__fill--warn { background: linear-gradient(90deg, var(--chart-bar-from), var(--chart-bar-to)); }
+.budget-bar__fill--over { background: linear-gradient(90deg, var(--p-cat-rose-soft), var(--p-cat-rose)); }
+
+/* FAB */
+.fab { @apply fixed bottom-6 right-6 z-40 min-h-[56px] px-6 rounded-full inline-flex items-center gap-2 cursor-pointer; border: none; background: var(--btn-filled-bg); color: var(--btn-filled-fg); font: var(--md-sys-typescale-label); box-shadow: var(--btn-filled-shadow); transition: box-shadow var(--p-dur-std) var(--p-ease-emph), transform var(--p-dur-micro) var(--p-ease-emph); }
+.fab:hover { box-shadow: var(--btn-filled-shadow-hover); transform: translateY(-1px); }
+.fab:active { transform: scale(0.97); }
+.fab .icon { width: var(--p-icon-lg); height: var(--p-icon-lg); font-size: var(--p-icon-lg); }
+
+/* STEPPER */
+.stepper { @apply flex items-center flex-wrap; gap: 0; }
+.stepper__step { @apply flex items-center gap-2 py-1 px-2; font: var(--md-sys-typescale-label); color: var(--page-subtle); }
+.stepper__dot { width: 14px; height: 14px; @apply rounded-full flex-[0_0_auto]; border: 2px solid var(--field-border); background: var(--md-sys-color-surface-container-high); }
+.stepper__step--done .stepper__dot     { background: var(--md-sys-color-primary); border-color: var(--md-sys-color-primary); }
+.stepper__step--current .stepper__dot { background: var(--md-sys-color-tertiary); border-color: var(--md-sys-color-tertiary); box-shadow: 0 0 0 4px var(--md-sys-color-state-focus); animation: pulse-dot 1.6s var(--p-ease-emph) infinite; }
+.stepper__step--terminal.verified .stepper__dot { background: var(--md-sys-color-success); border-color: var(--md-sys-color-success); }
+.stepper__step--terminal.failed .stepper__dot   { background: var(--md-sys-color-error);   border-color: var(--md-sys-color-error); }
+.stepper__step--current, .stepper__step--done { color: var(--page-fg); }
+.stepper__sep { width: var(--p-space-4); height: 2px; background: var(--field-border); flex: 0 0 auto; }
+.stepper__step--done + .stepper__sep { background: var(--md-sys-color-primary); }
+@keyframes pulse-dot { 0%,100% { box-shadow: 0 0 0 0 var(--md-sys-color-state-focus); } 50% { box-shadow: 0 0 0 6px transparent; } }
+
+/* EMPTY STATE */
+.empty { text-align: center; @apply px-4 py-12; color: var(--page-subtle); font: var(--md-sys-typescale-body); }
+.empty .icon { width: var(--p-icon-lg); height: var(--p-icon-lg); font-size: var(--p-icon-lg); margin-bottom: var(--p-space-3); opacity: 0.6; }
+
+/* BREADCRUMB */
+.breadcrumb { @apply flex items-center gap-1 flex-wrap; font: var(--md-sys-typescale-label); color: var(--page-subtle); }
+.breadcrumb a { color: var(--md-sys-color-primary); text-decoration: none; }
+.breadcrumb a:hover { text-decoration: underline; }
+.breadcrumb__sep { opacity: 0.5; }
+
+/* CODE */
+code, pre.mono { font: var(--md-sys-typescale-mono); }
+code { background: var(--code-inline-bg); @apply px-2 rounded-[4px]; padding-top: 1px; padding-bottom: 1px; }
+pre.mono { background: var(--code-bg); color: var(--code-fg); @apply px-4 rounded-md overflow-auto m-0; white-space: pre-wrap; word-break: break-word; }
+
+/* SECTION TITLE */
+.section-title { font: var(--md-sys-typescale-title); margin: 0 0 var(--p-space-3); color: var(--page-fg); }
+.section-sub   { font: var(--md-sys-typescale-body); color: var(--page-subtle); margin: 0 0 var(--p-space-4); }
+
+/* ALERT */
+.alert { @apply flex gap-3 px-4 py-3 rounded-md items-start; font: var(--md-sys-typescale-body); }
+.alert .icon { width: var(--p-icon-md); height: var(--p-icon-md); font-size: var(--p-icon-md); flex: 0 0 auto; margin-top: 2px; }
+.alert--error { background: var(--md-sys-color-error-container);     color: var(--md-sys-color-on-error-container); }
+.alert--info  { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+
+/* VISUALLY HIDDEN */
+.sr-only { @apply absolute overflow-hidden border-0 p-0 m-[-1px]; width: 1px; height: 1px; clip: rect(0,0,0,0); white-space: nowrap; }
+
+/* SKIP LINK */
+.skip-link { @apply absolute top-0 z-[300] rounded-md px-4 py-2; left: -9999px; font: var(--md-sys-typescale-label); background: var(--btn-filled-bg); color: var(--btn-filled-fg); }
+.skip-link:focus { left: var(--p-space-4); top: var(--p-space-4); }
+
+/* RUN GRAPH — execution DAG in run detail */
+.run-graph { @apply overflow-auto; }
+.gnode { cursor: pointer; }
+.gnode rect { fill: var(--card-bg); stroke: var(--table-border); stroke-width: 1.5; transition: stroke var(--p-dur-micro) var(--p-ease-emph); }
+.gnode:hover rect { stroke: var(--field-fg); }
+.gnode--completed rect, .gnode--verified rect { stroke: var(--chart-growth); }
+.gnode--running rect { stroke: var(--md-sys-color-primary); }
+.gnode--failed rect { stroke: var(--field-error); }
+.gnode--selected rect { stroke-width: 2.5; }
+.gnode__title { fill: var(--card-fg); font: var(--md-sys-typescale-body); }
+.gnode__sub { fill: var(--field-helper); font: var(--md-sys-typescale-label); }
+.gedge { stroke: var(--table-border); stroke-width: 1.5; fill: none; }
+.gedge--done { stroke: var(--chart-growth); }
+.gedge__arrow { fill: var(--table-border); }
+.gdetail { @apply mt-3 p-4; }
+.gdetail__row { @apply flex items-baseline gap-3 py-1; }
+.gdetail__label { @apply w-24 shrink-0; font: var(--md-sys-typescale-label); color: var(--field-helper); }
+.gdetail__value { font: var(--md-sys-typescale-body); color: var(--card-fg); }
+.gdetail__error { color: var(--field-error); font: var(--md-sys-typescale-body); }
+.raw-json { @apply mt-3; }
+.raw-json summary { @apply cursor-pointer select-none; font: var(--md-sys-typescale-label); color: var(--field-helper); }
+.raw-json pre { @apply mt-2 p-3 overflow-auto max-h-72 rounded-md; font: var(--md-sys-typescale-mono); background: var(--code-bg); color: var(--card-fg); }

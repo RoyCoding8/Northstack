@@ -1,0 +1,16 @@
+.git
+.venv
+.env
+runs
+node_modules
+__pycache__
+*.pyc
+.pytest_cache
+.mypy_cache
+.ruff_cache
+tests
+tasks
+tasks-hard
+docs
+*.md
+!README.md

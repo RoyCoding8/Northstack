@@ -1,0 +1,16 @@
+.git
+.gcloudignore
+.venv
+.env
+runs
+node_modules
+__pycache__
+*.pyc
+.pytest_cache
+.mypy_cache
+.ruff_cache
+tmp
+tests
+tasks
+tasks-hard
+docs

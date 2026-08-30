@@ -1,0 +1,43 @@
+{
+  "name": "live-smoke",
+  "cohort": "dev",
+  "tasks": [
+    {
+      "id": "fix-failing-test",
+      "category": "bug_fix",
+      "request": "Fix the failing tests in this repository. The bug is in the product code (calc.py); the tests are the specification and must not be modified. All tests must pass.",
+      "workspace": "tasks/fix-failing-test",
+      "token_limit": 200000,
+      "cost_limit_usd": 1,
+      "checks": [
+        {
+          "name": "unittest-suite-green",
+          "argv": ["python", "-m", "unittest", "discover", "-s", "tests", "-q"],
+          "expect_exit_code": 0,
+          "timeout_seconds": 60
+        },
+        {
+          "name": "tests-untouched",
+          "path": "tests/test_calc.py",
+          "content_contains": "assertEqual(add(2, 3), 5)"
+        }
+      ]
+    },
+    {
+      "id": "add-validation",
+      "category": "feature_add",
+      "request": "Implement validate_point as described in README.md so that all tests pass. Do not modify the tests.",
+      "workspace": "tasks/add-validation",
+      "token_limit": 200000,
+      "cost_limit_usd": 1,
+      "checks": [
+        {
+          "name": "unittest-suite-green",
+          "argv": ["python", "-m", "unittest", "discover", "-s", "tests", "-q"],
+          "expect_exit_code": 0,
+          "timeout_seconds": 60
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+# Normalize line endings: the Tailwind @apply parser drops declarations from
+# CRLF sources, so a Windows checkout must match the Linux CI checkout
+# byte-for-byte or every local build drifts from the committed stylesheet.
+* text=auto eol=lf
+
+*.png binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.db binary

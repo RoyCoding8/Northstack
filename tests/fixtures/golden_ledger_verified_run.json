@@ -1,0 +1,176 @@
+[
+  {
+    "kind": "run_created",
+    "schema_version": 1
+  },
+  {
+    "kind": "status_changed",
+    "schema_version": 1,
+    "status": "contracted"
+  },
+  {
+    "kind": "status_changed",
+    "schema_version": 1,
+    "status": "planned"
+  },
+  {
+    "acceptance_criteria_count": 1,
+    "allowed_tools": [],
+    "budget": {
+      "cost_limit_usd": 1.0,
+      "max_calls": 0,
+      "max_retries": 0,
+      "max_tool_rounds": 0,
+      "max_wall_time_seconds": 0.0,
+      "token_limit": 1000
+    },
+    "constraints": [],
+    "deliverables": [],
+    "id": "wc-1",
+    "kind": "contract_proposed",
+    "objective": "build feature",
+    "schema_version": 1,
+    "scope": "",
+    "unresolved_ambiguity": [],
+    "version": 1,
+    "workspace_scope": ""
+  },
+  {
+    "cells": [
+      {
+        "acceptance_criterion_indices": [],
+        "contract": {
+          "abstention_threshold": 0.5,
+          "acceptance_criteria": [],
+          "allowed_tools": [],
+          "assumptions": [],
+          "budget": {
+            "cost_limit_usd": 5.0,
+            "max_calls": 0,
+            "max_retries": 0,
+            "max_tool_rounds": 0,
+            "max_wall_time_seconds": 0.0,
+            "token_limit": 100000
+          },
+          "constraints": [],
+          "deliverables": [],
+          "forbidden_outcomes": [],
+          "id": "placeholder",
+          "objective": "",
+          "scope": "",
+          "unresolved_ambiguity": [],
+          "version": 1,
+          "workspace_scope": ""
+        },
+        "dependencies": [],
+        "id": "cell-1",
+        "input_schema": {},
+        "mode": "read_only",
+        "name": "build",
+        "output_schema": {},
+        "required_capabilities": [],
+        "required_profile_roles": [],
+        "status": "pending",
+        "wave": 0
+      }
+    ],
+    "edges": [],
+    "kind": "graph_accepted",
+    "milestones": [
+      "cell-1"
+    ],
+    "schema_version": 1,
+    "version": 1
+  },
+  {
+    "cell": {
+      "acceptance_criterion_indices": [],
+      "contract": {
+        "abstention_threshold": 0.5,
+        "acceptance_criteria": [],
+        "allowed_tools": [],
+        "assumptions": [],
+        "budget": {
+          "cost_limit_usd": 5.0,
+          "max_calls": 0,
+          "max_retries": 0,
+          "max_tool_rounds": 0,
+          "max_wall_time_seconds": 0.0,
+          "token_limit": 100000
+        },
+        "constraints": [],
+        "deliverables": [],
+        "forbidden_outcomes": [],
+        "id": "placeholder",
+        "objective": "",
+        "scope": "",
+        "unresolved_ambiguity": [],
+        "version": 1,
+        "workspace_scope": ""
+      },
+      "dependencies": [],
+      "id": "cell-1",
+      "input_schema": {},
+      "mode": "read_only",
+      "name": "build",
+      "output_schema": {},
+      "required_capabilities": [],
+      "required_profile_roles": [],
+      "status": "pending",
+      "wave": 0
+    },
+    "kind": "cell_created",
+    "schema_version": 1
+  },
+  {
+    "kind": "status_changed",
+    "schema_version": 1,
+    "status": "executing"
+  },
+  {
+    "cell_id": "cell-1",
+    "kind": "cell_completed",
+    "output_artifact": {
+      "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "media_type": "application/json",
+      "size_bytes": 1
+    },
+    "schema_version": 1,
+    "usage": {
+      "cost_usd": 0.0,
+      "input_tokens": 0,
+      "output_tokens": 0
+    }
+  },
+  {
+    "kind": "status_changed",
+    "schema_version": 1,
+    "status": "verifying"
+  },
+  {
+    "hard_gate_failures": [],
+    "kind": "evidence_recorded",
+    "material_disagreement": false,
+    "outcome": "verified",
+    "records": [],
+    "schema_version": 1,
+    "tools_used": [],
+    "usage": {
+      "total_calls": 0,
+      "total_cost_usd": 0.0,
+      "total_input_tokens": 0,
+      "total_output_tokens": 0
+    }
+  },
+  {
+    "kind": "status_changed",
+    "schema_version": 1,
+    "status": "verified"
+  },
+  {
+    "kind": "outcome_emitted",
+    "outcome": "verified",
+    "reason": "",
+    "schema_version": 1
+  }
+]

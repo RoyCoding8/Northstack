@@ -1,0 +1,275 @@
+# northstack configuration example. Provider-neutral profiles (openai_chat protocol),
+# each tagged with a role; [northstack.routing] maps roles to profiles. Pricing feeds
+# only a fallback tiebreak. Secrets are referenced by env-var name, never stored.
+# Remote endpoints must use HTTPS; a trusted plaintext proxy sets allow_insecure_http=true.
+
+[northstack]
+name = "Northstack AI"
+
+[northstack.run]
+# 0 on either axis = UNLIMITED (run never abstains for lack of it); set both to 0 to lift the ceiling.
+default_budget_tokens = 100_000
+default_budget_cost_usd = 5.0
+
+# Abstain with StallDetected if no per-cell heartbeat for this long (0 disables).
+# stall_window_seconds = 900.0
+
+# --- Optional model-backed planning / falsification / calibration ---
+# planner_mode = "model"        # PLANNER profile proposes decomposition; any failure falls back to single-cell
+# falsifier_mode = "model"      # SPECIALIST profile hunts a passing-but-wrong contract reading; outage fails open
+# calibration_path = "calibration/calibration.json"   # feeds soft-review agreement thresholds; malformed = hard error
+# memory_enabled = true         # recalls prior-run lessons into each cell (advisory); off by default (breaks reproducibility)
+
+# --- Workspace limits --- RestrictedWorkspace bounds; symlinks/junctions always rejected.
+[northstack.workspace]
+max_list_entries = 1000
+max_read_bytes = 1_048_576       # 1 MB
+max_search_results = 100
+max_search_file_bytes = 1_048_576
+max_search_files = 10_000
+max_search_directories = 1_000
+max_write_bytes = 1_048_576      # 1 MB
+max_patch_old_bytes = 65_536     # 64 KB
+lease_timeout_seconds = 30.0
+
+# --- Web fetch policy --- read-only public-web fetch with SSRF protection.
+[northstack.web_fetch]
+max_response_bytes = 1_048_576   # 1 MB
+timeout_seconds = 10.0
+max_redirects = 5
+allowed_content_types = ["text/html", "text/plain", "application/json"]
+
+# --- Command profiles --- subprocess commands; shell=false, workspace cwd, env allowlist, no API keys inherited.
+# isolation="host" (default): restricted execution, NOT a sandbox (host authority).
+# isolation="docker": throwaway container (--rm --network none, /workspace bind-mount); fails closed if Docker absent.
+# [[northstack.commands]]
+# name = "test-boxed"
+# argv = ["python", "-m", "pytest", "tests/", "-q"]
+# isolation = "docker"
+# docker_image = "python:3.12-slim"
+# timeout_seconds = 120.0
+# max_output_bytes = 131_072
+# env_allowlist = ["PATH"]
+
+[[northstack.commands]]
+name = "lint"
+argv = ["python", "-m", "ruff", "check", "src/", "tests/"]
+timeout_seconds = 30.0
+max_output_bytes = 65_536
+env_allowlist = ["PATH"]
+
+[[northstack.commands]]
+name = "test"
+argv = ["python", "-m", "pytest", "tests/", "-q"]
+timeout_seconds = 120.0
+max_output_bytes = 131_072
+env_allowlist = ["PATH"]
+
+[[northstack.commands]]
+name = "format"
+argv = ["python", "-m", "ruff", "format", "src/", "tests/"]
+timeout_seconds = 15.0
+max_output_bytes = 32_768
+env_allowlist = ["PATH"]
+
+# --- Role -> profile routing (authoritative) --- each role lists profiles in fallback order;
+# a profile named here must declare the matching role. Omit to fall back to tier scoring.
+#   worker=menial (file/search/exec)  reviewer=blinded soft-review  planner=graph/contract
+#   specialist=falsification/diagnosis  orchestrator=highest-tier integration & judgment
+[[northstack.routing]]
+role = "worker"
+profiles = ["cheap-worker"]
+
+[[northstack.routing]]
+role = "reviewer"
+profiles = ["reviewer-mid", "reviewer-alt"]
+
+[[northstack.routing]]
+role = "planner"
+profiles = ["planner-mid"]
+
+[[northstack.routing]]
+role = "specialist"
+profiles = ["expert"]
+
+[[northstack.routing]]
+role = "orchestrator"
+profiles = ["orchestrator-opus"]
+
+# --- Tier 1: cheap haiku-level worker (menial jobs); high-concurrency evidence gathering.
+[[northstack.profiles]]
+name = "cheap-worker"
+protocol = "openai_chat"
+base_url = "http://localhost:8080/v1"
+model = "mimo-v2.5"
+api_key_env = "MIMO_API_KEY"
+roles = ["worker"]
+capabilities = ["tool_use"]
+max_concurrency = 8
+requests_per_minute = 120
+context_window_tokens = 128_000
+max_output_tokens = 8_192
+# reasoning models can take minutes before first byte (default 300).
+request_timeout_seconds = 300.0
+input_price_per_million_usd = 0.3
+output_price_per_million_usd = 1.2
+
+# --- Tier 2: mid reviewer for blinded soft checks ---
+[[northstack.profiles]]
+name = "reviewer-mid"
+protocol = "openai_chat"
+base_url = "http://localhost:8080/v1"
+model = "mimo-v2.5"
+api_key_env = "MIMO_API_KEY"
+roles = ["reviewer"]
+capabilities = ["native_json_schema"]
+max_concurrency = 4
+requests_per_minute = 60
+context_window_tokens = 64_000
+max_output_tokens = 4_096
+input_price_per_million_usd = 0.5
+output_price_per_million_usd = 2.0
+
+# --- Tier 2: mid planner ---
+[[northstack.profiles]]
+name = "planner-mid"
+protocol = "openai_chat"
+base_url = "http://localhost:8090/v1"
+model = "glm-5.2"
+api_key_env = "GLM_API_KEY"
+roles = ["planner"]
+capabilities = ["tool_use", "native_json_schema"]
+max_concurrency = 2
+requests_per_minute = 40
+context_window_tokens = 200_000
+max_output_tokens = 8_192
+input_price_per_million_usd = 3.0
+output_price_per_million_usd = 9.0
+
+# --- Tier 1: second blinded reviewer (independent panel member) ---
+# soft-review panel takes the first two reviewer-chain profiles; two DISTINCT profiles required (no self-verification).
+[[northstack.profiles]]
+name = "reviewer-alt"
+protocol = "openai_chat"
+base_url = "http://localhost:8095/v1"
+model = "qwen-large"
+api_key_env = "QWEN_API_KEY"
+roles = ["reviewer"]
+capabilities = ["native_json_schema"]
+max_concurrency = 4
+requests_per_minute = 60
+context_window_tokens = 64_000
+max_output_tokens = 4_096
+input_price_per_million_usd = 0.4
+output_price_per_million_usd = 1.6
+
+# --- Tier 3: singleton expert specialist (GLM 5.2, falsification/diagnosis, single-flight).
+[[northstack.profiles]]
+name = "expert"
+protocol = "openai_chat"
+base_url = "http://localhost:8090/v1"
+model = "glm-5.2"
+api_key_env = "GLM_API_KEY"
+roles = ["specialist", "reviewer", "planner"]
+capabilities = ["tool_use", "native_json_schema"]
+max_concurrency = 1
+requests_per_minute = 30
+context_window_tokens = 200_000
+max_output_tokens = 16_384
+input_price_per_million_usd = 10.0
+output_price_per_million_usd = 30.0
+
+# --- Tier 3: opus-level orchestrator (final integration/escalation, single-flight).
+[[northstack.profiles]]
+name = "orchestrator-opus"
+protocol = "anthropic_messages"
+base_url = "https://api.anthropic.com"
+model = "claude-opus-4-8"
+api_key_env = "ANTHROPIC_API_KEY"
+roles = ["orchestrator", "specialist"]
+capabilities = ["tool_use", "native_json_schema"]
+max_concurrency = 1
+requests_per_minute = 20
+context_window_tokens = 200_000
+max_output_tokens = 32_000
+input_price_per_million_usd = 15.0
+output_price_per_million_usd = 75.0
+
+# --- Gemini endpoints (gemini_generate_content) --- base_url is the API root; model in URL path,
+# key in x-goog-api-key header (neither belongs in base_url). Paid-tier numbers commented beside each price.
+[[northstack.profiles]]
+name = "gemini-cheap-worker"
+protocol = "gemini_generate_content"
+base_url = "https://generativelanguage.googleapis.com"
+model = "gemini-3.5-flash-lite"
+api_key_env = "GEMINI_API_KEY"
+roles = ["worker"]
+capabilities = ["tool_use", "native_json_schema", "streaming"]
+max_concurrency = 8
+requests_per_minute = 120
+context_window_tokens = 1_000_000
+max_output_tokens = 8_192
+input_price_per_million_usd = 0.0   # paid tier: 0.30
+output_price_per_million_usd = 0.0  # paid tier: 2.50
+
+[[northstack.profiles]]
+name = "gemini-expert"
+protocol = "gemini_generate_content"
+base_url = "https://generativelanguage.googleapis.com"
+model = "gemini-3.7-flash"
+api_key_env = "GEMINI_API_KEY"
+roles = ["planner", "specialist", "orchestrator"]
+capabilities = ["tool_use", "native_json_schema", "streaming"]
+max_concurrency = 2
+requests_per_minute = 30
+context_window_tokens = 1_000_000
+max_output_tokens = 32_000
+input_price_per_million_usd = 0.0   # paid tier: 0.75
+output_price_per_million_usd = 0.0  # paid tier: 3.75
+
+# --- Local no-key endpoint (optional) ---
+# [[northstack.profiles]]
+# name = "local-worker"
+# protocol = "openai_chat"
+# base_url = "http://localhost:11434/v1"
+# model = "llama3"
+# roles = ["worker"]
+# max_concurrency = 4
+# requests_per_minute = 20
+# context_window_tokens = 8_192
+# max_output_tokens = 4_096
+
+# --- Endpoint escape hatch --- optional fields for endpoints wrapping a protocol in own auth/versioning:
+#   auth_header       raw header the resolved key is written to (default per protocol: Bearer / x-api-key / x-goog-api-key)
+#   extra_headers     static per-request headers (credentials rejected; keys belong in api_key_env, redacted from logs)
+#   extra_query       static query params appended to the request URL
+#   token_limit_param openai_chat output-token param; OpenAI reasoning models need "max_completion_tokens" (default otherwise)
+# Azure OpenAI: key in "api-key" header, deployment in path, api-version in query.
+# [[northstack.profiles]]
+# name = "azure-worker"
+# protocol = "openai_chat"
+# base_url = "https://my-resource.openai.azure.com/openai/deployments/my-deployment"
+# model = "gpt-5-mini"
+# api_key_env = "AZURE_OPENAI_API_KEY"
+# auth_header = "api-key"
+# extra_query = { "api-version" = "2024-10-21" }
+# token_limit_param = "max_completion_tokens"
+# roles = ["worker"]
+# max_concurrency = 4
+# requests_per_minute = 60
+# context_window_tokens = 128_000
+# max_output_tokens = 8_192
+#
+# OpenRouter: same wire format as OpenAI, plus attribution headers.
+# [[northstack.profiles]]
+# name = "openrouter-worker"
+# protocol = "openai_chat"
+# base_url = "https://openrouter.ai/api/v1"
+# model = "anthropic/claude-sonnet-4.5"
+# api_key_env = "OPENROUTER_API_KEY"
+# extra_headers = { "HTTP-Referer" = "https://example.com", "X-Title" = "NorthStack" }
+# roles = ["worker"]
+# max_concurrency = 4
+# requests_per_minute = 60
+# context_window_tokens = 200_000
+# max_output_tokens = 8_192

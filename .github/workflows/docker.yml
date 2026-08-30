@@ -1,0 +1,37 @@
+name: Docker
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build image
+        run: docker build -t northstack:ci .
+      - name: Boot the control plane
+        run: |
+          docker run --rm -d --name smoke -p 8000:8000 \
+            -e NORTHSTACK_WEB_TOKEN=ci-smoke-token \
+            -v "$PWD/northstack.example.toml:/app/northstack.toml:ro" \
+            northstack:ci
+      - name: Wait for readiness
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf -H "Authorization: Bearer ci-smoke-token" http://localhost:8000/api/config; then
+              echo "control plane is up"; exit 0
+            fi
+            sleep 2
+          done
+          echo "--- container logs ---"
+          docker logs smoke
+          exit 1
+      - name: Container logs
+        if: always()
+        run: docker logs smoke || true

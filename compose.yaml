@@ -1,0 +1,21 @@
+services:
+  web:
+    build: .
+    image: northstack:latest
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      NORTHSTACK_WEB_TOKEN: ${NORTHSTACK_WEB_TOKEN:?set NORTHSTACK_WEB_TOKEN in .env}
+    volumes:
+      - ./runs:/app/runs
+      - ./sandboxes:/app/sandboxes
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import os,urllib.request; r=urllib.request.urlopen('http://127.0.0.1:8000/', timeout=5); assert r.status==200"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s

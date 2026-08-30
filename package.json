@@ -1,0 +1,21 @@
+{
+  "name": "northstack-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Build tooling for the northstack control-surface UI. Material Design 3 (via @material-tailwind/html) on Tailwind CSS. The static/ dir is served as-is by the FastAPI dev server, so the build writes its bundle directly into static/.",
+  "scripts": {
+    "test": "npm run test:js",
+    "test:js": "node --test tests/js/*.test.mjs",
+    "build:css": "tailwindcss -c tailwind.config.cjs -i tailwind-src.css -o src/northstack/interfaces/web/static/components.css --minify",
+    "watch:css": "tailwindcss -c tailwind.config.cjs -i tailwind-src.css -o src/northstack/interfaces/web/static/components.css --watch",
+    "build": "npm run build:css",
+    "dev": "npm run watch:css"
+  },
+  "devDependencies": {
+    "@material-tailwind/html": "^2.3.2",
+    "mermaid": "^11.17.2",
+    "playwright": "^1.62.1",
+    "tailwindcss": "^3.4.19"
+  }
+}
