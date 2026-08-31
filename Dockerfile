@@ -27,6 +27,9 @@ WORKDIR /app
 COPY --from=builder --chown=northstack:northstack /app/.venv /app/.venv
 COPY --chown=northstack:northstack northstack.toml ./northstack.toml
 COPY --chown=northstack:northstack sandboxes ./sandboxes
+# /app itself stays root-owned unless chowned; config save writes its temp
+# file next to the toml and would 500 with EACCES.
+RUN chown northstack:northstack /app
 ENV PATH="/app/.venv/bin:$PATH" VIRTUAL_ENV=/app/.venv PORT=8080
 
 USER northstack
